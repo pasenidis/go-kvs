@@ -11,7 +11,8 @@ import (
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
-	r.HandleFunc("/{key}", KeyHandler)
+	r.HandleFunc("/{key}", KeyReaderHandler).Methods("GET")
+	r.HandleFunc("/{key}", KeyWriterHandler).Methods("GET")
 
 	r.Use(mux.CORSMethodMiddleware(r))
 
@@ -34,13 +35,28 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(payload)
 }
 
-// KeyHandler is the key route located at /{key}
-func KeyHandler(w http.ResponseWriter, r *http.Request) {
+// KeyReaderHandler is the key route located at /{key}
+func KeyReaderHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	w.WriteHeader(http.StatusOK)
 
 	json := simplejson.New()
 	json.Set("key", vars["key"])
+
+	payload, err := json.MarshalJSON()
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Write(payload)
+}
+
+// KeyWriterHandler is the key route creator located at /{key}
+func KeyWriterHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	json := simplejson.New()
 
 	payload, err := json.MarshalJSON()
 	if err != nil {
